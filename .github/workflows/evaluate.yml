@@ -45,7 +45,7 @@ jobs:
       
       - name: Commit leaderboard update
         env:
-          PAT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           git add leaderboard.md
           git commit -m "Update leaderboard"
