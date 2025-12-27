@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas scikit-learn
+          pip install pandas pyarrow scikit-learn
 
       - name: Clone private labels repo
         env:
