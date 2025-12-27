@@ -34,12 +34,8 @@ entry = f"| 0    | {username:<21}|{score:>12.4f} | {timestamp:<24}|\n"
 new_lines.append(entry)
 
 # Sort by score (descending)
-header = new_lines[:3]
-rows = new_lines[3:]
-
-print()
-print(rows)
-print()
+header = new_lines[:4]
+rows = new_lines[4:]
 
 rows_sorted = sorted(
     rows,
