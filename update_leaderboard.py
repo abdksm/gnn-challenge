@@ -37,6 +37,10 @@ new_lines.append(entry)
 header = new_lines[:3]
 rows = new_lines[3:]
 
+print()
+print(rows)
+print()
+
 rows_sorted = sorted(
     rows,
     key=lambda x: float(x.split("|")[3]),
