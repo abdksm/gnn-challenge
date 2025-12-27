@@ -49,4 +49,4 @@ jobs:
         run: |
           git add leaderboard.md
           git commit -m "Update leaderboard"
-          git push https://$BOT_TOKEN@github.com/abdksm/gnn-challenge.git main
+          git push https://${BOT_TOKEN}@github.com/abdksm/gnn-challenge.git main
