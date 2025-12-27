@@ -7,7 +7,7 @@ truth_path = sys.argv[2]
 output_path = sys.argv[3]
 
 submission = pd.read_parquet(submission_path)
-truth = pd.read_csv(truth_path)
+truth = pd.read_parquet(truth_path)
 
 score = f1_score(truth["y"], submission["y_pred"], average="macro")
 
