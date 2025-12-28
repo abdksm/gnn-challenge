@@ -29,7 +29,7 @@ jobs:
 
       - name: Run scoring
         run: |
-          python scoring_script.py submissions/random_submission.parquet private_labels/test_labels.parquet score.txt
+          python scoring_script.py submissions/submission.parquet private_labels/test_labels.parquet score.txt
           cp score.txt /tmp/score.txt
 
       - uses: actions/checkout@v4
