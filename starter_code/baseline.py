@@ -22,22 +22,46 @@ class GCN(torch.nn.Module):
         x = global_mean_pool(x, batch)  
         x = self.lin(x)
         return x
-
-dataset = pd.read_parquet(r'..\data\train.parquet')
-train, val = train_test_split(dataset, test_size=0.2, random_state=42, shuffle=True)
-
-graph_list = []
-
-for _, row in train.iterrows():
-    x = torch.tensor(np.vstack(row['node_feat']).astype(np.float32))
-    edge_index = torch.tensor(np.vstack(row['edge_index']).astype(np.int32))
-    edge_attr = torch.tensor(np.vstack(row['edge_attr']).astype(np.float32)) 
-    y = torch.tensor(row['y'], dtype=torch.long)
-    data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y)
-    graph_list.append(data)
     
-train_loader = DataLoader(graph_list, batch_size=32, shuffle=False)
+def build_dataloader(df, batch_size=32, shuffle=False, has_labels=True):
+    graph_list = []
 
+    for _, row in df.iterrows():
+        x = torch.tensor(np.vstack(row["node_feat"]).astype(np.float32))
+        edge_index = torch.tensor(np.vstack(row["edge_index"]).astype(np.int64))
+        edge_attr = torch.tensor(np.vstack(row["edge_attr"]).astype(np.float32))
+
+        if has_labels:
+            y = torch.tensor(row["y"], dtype=torch.long)
+            data = Data(
+                x=x,
+                edge_index=edge_index,
+                edge_attr=edge_attr,
+                y=y,
+            )
+        else:
+            data = Data(
+                x=x,
+                edge_index=edge_index,
+                edge_attr=edge_attr,
+            )
+
+        graph_list.append(data)
+
+    return DataLoader(graph_list, batch_size=batch_size, shuffle=shuffle,
+    )
+
+# Loading data 
+dataset = pd.read_parquet(r'..\data\train.parquet')
+train, val = train_test_split(dataset, test_size=0.2, random_state=42, shuffle=True) 
+test = pd.read_parquet(r'..\data\test.parquet')
+
+# Building dataloaders   
+train_loader = build_dataloader(train, batch_size=32, shuffle=True, has_labels=True)
+val_loader = build_dataloader(val, batch_size=32, shuffle=False, has_labels=True)
+test_loader = build_dataloader(test, batch_size=32, shuffle=False, has_labels=False)
+
+# Initiating the model
 num_node_features = 38 
 num_classes = 2  
 
@@ -45,8 +69,10 @@ model = GCN(num_node_features, hidden_channels=64, num_classes=num_classes)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 criterion = torch.nn.CrossEntropyLoss()
 
+# Training
+n_epoch = 300
 model.train()
-for epoch in range(300):  
+for epoch in range(n_epoch):  
     total_loss = 0
     for batch in train_loader:
         optimizer.zero_grad()
@@ -58,19 +84,7 @@ for epoch in range(300):
     print(f"Epoch {epoch+1}, Loss: {total_loss/len(train_loader):.4f}")
     
     
-val_graph_list = []
-
-for _, row in val.iterrows():
-    x = torch.tensor(np.vstack(row['node_feat']).astype(np.float32))
-    edge_index = torch.tensor(np.vstack(row['edge_index']).astype(np.int64))
-    edge_attr = torch.tensor(np.vstack(row['edge_attr']).astype(np.float32))
-    y = torch.tensor(row['y'], dtype=torch.long)
-
-    data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y)
-    val_graph_list.append(data)
-
-val_loader = DataLoader(val_graph_list, batch_size=32, shuffle=False)
-
+# Validation
 model.eval()
 y_true, y_pred = [], []
 
@@ -86,19 +100,8 @@ with torch.no_grad():
     
 print (f'Validation F1 Score : {score:.4f}')
 
-test = pd.read_parquet(r'..\data\test.parquet')
 
-test_graph_list = []
-
-for _, row in test.iterrows():
-    x = torch.tensor(np.vstack(row['node_feat']).astype(np.float32))
-    edge_index = torch.tensor(np.vstack(row['edge_index']).astype(np.int64))
-    edge_attr = torch.tensor(np.vstack(row['edge_attr']).astype(np.float32))
-    data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr)
-    test_graph_list.append(data)
-
-test_loader = DataLoader(test_graph_list, batch_size=32, shuffle=False)
-
+# Testing
 test_preds =[]
 with torch.no_grad():
     for batch in test_loader:
@@ -106,4 +109,4 @@ with torch.no_grad():
         pred = out.argmax(dim=1)
         test_preds.extend(pred.cpu().numpy())
         
-pd.DataFrame({'graph_id': test['graph_id'], 'y_pred': test_preds}).to_parquet('../submissions/sample_submission.parquet', index=False)
+pd.DataFrame({'graph_id': test['graph_id'], 'y_pred': test_preds}).to_parquet('../submissions/submission.parquet', index=False)
