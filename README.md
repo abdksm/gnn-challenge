@@ -47,3 +47,7 @@ The evaluation metric is the **macro F1-score**, which computes the F1-score ind
 * The leaderboard is available in `leaderboard.md`.
 * Once a pull request is submitted, the submission is evaluated automatically and added to the leaderboard within a few minutes.
 * **Only the most recent submission per user is kept** on the leaderboard.
+
+---
+
+A baseline code is provided in `starter_code/baseline.py/`, Good luck!
